@@ -1,0 +1,19 @@
+# S.I Transmittal — production (Apache)
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Force HTTPS when SSL is enabled on your host (uncomment after SSL works)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Block direct access to SQL and example config
+<FilesMatch "^(setup\.sql|setup-hosting\.sql|config\.example\.php)$">
+    Require all denied
+</FilesMatch>
+
+# PHP settings (if host allows)
+<IfModule mod_php.c>
+    php_flag display_errors Off
+</IfModule>

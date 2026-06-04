@@ -1,0 +1,15 @@
+# Never commit secrets or local config
+config.php
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local XAMPP (not used online)
+*.bat
+*.vbs
+lan-check.php
