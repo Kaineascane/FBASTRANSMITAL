@@ -29,6 +29,37 @@ function h(?string $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+/** @return array<string, mixed> */
+function appConfig(): array
+{
+    static $cached = null;
+    if ($cached !== null) {
+        return $cached;
+    }
+
+    $path = dirname(__DIR__) . '/config.php';
+    $cached = is_file($path) ? (require $path) : [];
+
+    return is_array($cached) ? $cached : [];
+}
+
+/** Canonical site URL from config, or auto-detected from the current request */
+function appBaseUrl(): string
+{
+    $configured = trim((string) (appConfig()['app_url'] ?? ''));
+    if ($configured !== '') {
+        return rtrim($configured, '/');
+    }
+
+    $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443)
+        || (strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https');
+    $scheme = $https ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+
+    return $scheme . '://' . $host;
+}
+
 function flashStart(): void
 {
     if (session_status() === PHP_SESSION_NONE) {

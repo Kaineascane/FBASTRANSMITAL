@@ -10,6 +10,9 @@ if (!is_file($configPath)) {
 
 $config = require $configPath;
 
+require_once __DIR__ . '/domain.php';
+applyDomainSettings($config);
+
 $host = $config['db_host'] ?? 'localhost';
 $user = $config['db_user'] ?? '';
 $pass = $config['db_pass'] ?? '';

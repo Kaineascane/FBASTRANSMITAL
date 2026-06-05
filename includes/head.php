@@ -14,6 +14,11 @@ $headerActionLabel = $headerActionLabel ?? 'Search / Reprint';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0f2744">
+<?php
+  $canonical = appBaseUrl() . ($_SERVER['REQUEST_URI'] ?? '/');
+  $canonical = strtok($canonical, '?') ?: $canonical;
+?>
+  <link rel="canonical" href="<?= h($canonical) ?>">
   <title><?= h($pageTitle) ?></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

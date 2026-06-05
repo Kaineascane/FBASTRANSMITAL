@@ -13,3 +13,6 @@ Thumbs.db
 *.bat
 *.vbs
 lan-check.php
+
+# Deployment packages (generated locally)
+deploy/*.zip
