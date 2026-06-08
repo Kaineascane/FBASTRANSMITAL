@@ -1,7 +1,7 @@
 import AppHeader from '@/components/AppHeader';
 import DbSetupBanner from '@/components/DbSetupBanner';
 import TransmittalForm from '@/components/TransmittalForm';
-import { ensureSchema } from '@/lib/db';
+import { ensureSchema, getDbMode, isDatabaseReady } from '@/lib/db';
 import { decodeFlashParam } from '@/lib/flash';
 import { getNextSeries } from '@/lib/transmittal';
 
@@ -10,16 +10,16 @@ export const dynamic = 'force-dynamic';
 type Props = { searchParams: Promise<{ flash?: string }> };
 
 export default async function HomePage({ searchParams }: Props) {
-  const dbConfigured = Boolean(process.env.POSTGRES_URL);
+  const dbReady = isDatabaseReady();
 
-  if (dbConfigured) {
+  if (dbReady) {
     await ensureSchema().catch(() => null);
   }
 
   const { flash } = await searchParams;
   const { errors, old } = decodeFlashParam(flash);
 
-  const next = dbConfigured
+  const next = dbReady
     ? await getNextSeries().catch(() => ({ pad: 1, si: 1 }))
     : { pad: 1, si: 1 };
   const today = new Date().toISOString().slice(0, 10);
@@ -39,7 +39,12 @@ export default async function HomePage({ searchParams }: Props) {
     <>
       <AppHeader />
       <main className="app-main container">
-        {!dbConfigured && <DbSetupBanner />}
+        {!dbReady && <DbSetupBanner />}
+        {dbReady && getDbMode() === 'sqlite' && (
+          <p className="page-intro mb-3">
+            <i className="bi bi-database" /> Local database: <code>data/transmittal.db</code>
+          </p>
+        )}
         <TransmittalForm
           errors={errors}
           nextPad={next.pad}

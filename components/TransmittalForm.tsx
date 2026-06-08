@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createTransmittal } from '@/app/actions';
 import { SI_PER_PAD } from '@/lib/constants';
 
 type Props = {
@@ -69,7 +68,8 @@ export default function TransmittalForm({ errors, nextPad, nextSi, lastSiEnd, to
 
       <div className="card-panel">
         <form
-          action={createTransmittal}
+          action="/api/transmittal"
+          method="POST"
           id="transmittalForm"
           onChange={(e) => updatePreview(e.currentTarget)}
           onInput={(e) => updatePreview(e.currentTarget)}

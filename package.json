@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:setup": "node scripts/setup-db.mjs"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
@@ -15,9 +16,11 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "better-sqlite3": "^11.8.1",
     "typescript": "^5.7.0"
   }
 }

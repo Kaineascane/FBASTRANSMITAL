@@ -45,16 +45,18 @@ You should see: `{"ok":true,"message":"Database tables created."}`
 | `/search` | Search / reprint |
 | `/print/1` | Print slip (after saving one) |
 
-## Local development
+## Local development (no Postgres required)
 
 ```bash
 npm install
-cp .env.example .env.local
-# Add POSTGRES_URL from Vercel dashboard → Storage → .env.local
+cp .env.example .env.local   # or use the included .env.local
+npm run db:setup             # creates data/transmittal.db + tables
 npm run dev
 ```
 
-Open http://localhost:3000
+Open http://localhost:3000 — uses **SQLite** automatically when `POSTGRES_URL` is empty.
+
+Optional: add `POSTGRES_URL` to `.env.local` to use the same Neon/Vercel database locally.
 
 ## Legacy PHP
 

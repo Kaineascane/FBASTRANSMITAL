@@ -1,53 +1,17 @@
-import { sql } from './db';
 import { SI_PER_PAD, SLIP_ROWS_PER_PAGE } from './constants';
+import {
+  dbGetNextSeries,
+  dbGetTransmittalById,
+  dbGetTransmittalDetails,
+  dbSaveTransmittal,
+  dbSearchTransmittals,
+} from './db';
+import type { DetailRow, SlipPage, TransmittalInput } from './transmittal-types';
 
-export type TransmittalRow = {
-  id: number;
-  from_branch: string;
-  to_branch: string;
-  released_by: string;
-  date_released: string;
-  created_at: string;
-};
-
-export type DetailRow = {
-  id: number;
-  transmittal_id: number;
-  pad_no: number;
-  si_start: number;
-  si_end: number;
-};
-
-export type TransmittalInput = {
-  from_branch: string;
-  to_branch: string;
-  released_by: string;
-  date_released: string;
-  starting_pad: number;
-  starting_si: number;
-  total_pads: number;
-};
-
-export type SlipPage = {
-  rows: (DetailRow | null)[];
-  page: number;
-  total: number;
-  startNo: number;
-};
+export type { DetailRow, SlipPage, TransmittalInput, TransmittalRow } from './transmittal-types';
 
 export async function getNextSeries(): Promise<{ pad: number; si: number }> {
-  let pad = 1;
-  let si = 1;
-
-  const padResult = await sql`SELECT MAX(pad_no) AS last_pad FROM tbl_transmittal_details`;
-  const lastPad = padResult.rows[0]?.last_pad;
-  if (lastPad != null) pad = Number(lastPad) + 1;
-
-  const siResult = await sql`SELECT MAX(si_end) AS last_si FROM tbl_transmittal_details`;
-  const lastSi = siResult.rows[0]?.last_si;
-  if (lastSi != null) si = Number(lastSi) + 1;
-
-  return { pad, si };
+  return dbGetNextSeries();
 }
 
 export function validateTransmittalInput(data: TransmittalInput): {
@@ -90,61 +54,19 @@ export function validateTransmittalInput(data: TransmittalInput): {
 }
 
 export async function saveTransmittal(input: TransmittalInput): Promise<number> {
-  const header = await sql`
-    INSERT INTO tbl_transmittal (from_branch, to_branch, released_by, date_released)
-    VALUES (${input.from_branch}, ${input.to_branch}, ${input.released_by}, ${input.date_released})
-    RETURNING id
-  `;
-  const transmittalId = Number(header.rows[0].id);
-
-  let pad = input.starting_pad;
-  let siStart = input.starting_si;
-
-  for (let i = 0; i < input.total_pads; i++) {
-    const siEnd = siStart + SI_PER_PAD - 1;
-    await sql`
-      INSERT INTO tbl_transmittal_details (transmittal_id, pad_no, si_start, si_end)
-      VALUES (${transmittalId}, ${pad}, ${siStart}, ${siEnd})
-    `;
-    pad++;
-    siStart = siEnd + 1;
-  }
-
-  return transmittalId;
+  return dbSaveTransmittal(input, SI_PER_PAD);
 }
 
-export async function searchTransmittals(q: string): Promise<TransmittalRow[]> {
-  const like = `%${q}%`;
-  const result = await sql`
-    SELECT id, from_branch, to_branch, released_by, date_released::text, created_at::text
-    FROM tbl_transmittal
-    WHERE from_branch ILIKE ${like}
-       OR to_branch ILIKE ${like}
-       OR released_by ILIKE ${like}
-       OR CAST(id AS TEXT) ILIKE ${like}
-       OR date_released::text ILIKE ${like}
-    ORDER BY id DESC
-    LIMIT 100
-  `;
-  return result.rows as TransmittalRow[];
+export async function searchTransmittals(q: string) {
+  return dbSearchTransmittals(q);
 }
 
-export async function getTransmittalById(id: number): Promise<TransmittalRow | null> {
-  const result = await sql`
-    SELECT id, from_branch, to_branch, released_by, date_released::text, created_at::text
-    FROM tbl_transmittal WHERE id = ${id}
-  `;
-  return (result.rows[0] as TransmittalRow) ?? null;
+export async function getTransmittalById(id: number) {
+  return dbGetTransmittalById(id);
 }
 
-export async function getTransmittalDetails(id: number): Promise<DetailRow[]> {
-  const result = await sql`
-    SELECT id, transmittal_id, pad_no, si_start, si_end
-    FROM tbl_transmittal_details
-    WHERE transmittal_id = ${id}
-    ORDER BY pad_no ASC
-  `;
-  return result.rows as DetailRow[];
+export async function getTransmittalDetails(id: number) {
+  return dbGetTransmittalDetails(id);
 }
 
 export function paginateSlipRows(allRows: DetailRow[], perPage = SLIP_ROWS_PER_PAGE): SlipPage[] {
