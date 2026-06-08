@@ -5,6 +5,7 @@ out/
 .env
 .env.local
 .env*.local
+!.env.example
 
 # Never commit secrets or local config
 config.php
