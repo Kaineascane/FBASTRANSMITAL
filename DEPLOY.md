@@ -45,6 +45,62 @@ Open: **https://fbastransmittal.infinityfree.io/**
 
 If you see “Database connection failed”, fix `db_host` / user / password / `db_name` in `config.php`.
 
+---
+
+## Fix: **403 Forbidden** (InfinityFree page)
+
+This almost always means **`index.php` is not in the folder InfinityFree uses for your domain**.
+
+### Check 1 — Correct folder
+
+1. InfinityFree **Control Panel** → **Domains** → **Manage** your site.
+2. Find **Directory** (often `htdocs`).
+3. Open that folder in **File Manager**.
+
+You must see **`index.php`** in that folder — **not** only inside `FBAStransmital/`, `public/`, or `htdocs/htdocs/`.
+
+**Wrong:**
+
+```
+htdocs/
+  FBAStransmital/
+    index.php    ← server does not look here for /
+```
+
+**Right:**
+
+```
+htdocs/
+  index.php
+  includes/
+  css/
+  ...
+```
+
+**Fix:** Select all files inside the subfolder → **Move** them up into `htdocs`.
+
+### Check 2 — Test direct URL
+
+Open:
+
+`https://fbastransmittal.infinityfree.io/index.php`
+
+| Result | Meaning |
+|--------|---------|
+| **403** | `index.php` missing or wrong folder |
+| **404** | File not found (wrong path/name; names are case-sensitive: `index.php` not `Index.php`) |
+| **App or DB error** | Upload is OK — fix `config.php` / database |
+
+### Check 3 — Replace `.htaccess`
+
+Upload the latest `.htaccess` from this project (old versions with `php_flag` can cause 403 on free hosting).
+
+### Check 4 — Temporary test
+
+Rename `.htaccess` to `.htaccess.bak` on the server and reload the site. If it works, upload the new `.htaccess` from the repo.
+
+---
+
 ### Step 5 — Go live
 
 - Set `'debug' => false` in `config.php`

@@ -11,14 +11,18 @@ function getNextSeries(mysqli $conn): array
     $pad = 1;
     $si = 1;
 
-    $padResult = mysqli_query($conn, 'SELECT MAX(pad_no) AS last_pad FROM tbl_transmittal_details');
-    if ($padResult && ($row = mysqli_fetch_assoc($padResult)) && $row['last_pad'] !== null) {
-        $pad = (int) $row['last_pad'] + 1;
-    }
+    try {
+        $padResult = @mysqli_query($conn, 'SELECT MAX(pad_no) AS last_pad FROM tbl_transmittal_details');
+        if ($padResult && ($row = mysqli_fetch_assoc($padResult)) && $row['last_pad'] !== null) {
+            $pad = (int) $row['last_pad'] + 1;
+        }
 
-    $siResult = mysqli_query($conn, 'SELECT MAX(si_end) AS last_si FROM tbl_transmittal_details');
-    if ($siResult && ($row = mysqli_fetch_assoc($siResult)) && $row['last_si'] !== null) {
-        $si = (int) $row['last_si'] + 1;
+        $siResult = @mysqli_query($conn, 'SELECT MAX(si_end) AS last_si FROM tbl_transmittal_details');
+        if ($siResult && ($row = mysqli_fetch_assoc($siResult)) && $row['last_si'] !== null) {
+            $si = (int) $row['last_si'] + 1;
+        }
+    } catch (Throwable $e) {
+        return ['pad' => 1, 'si' => 1];
     }
 
     return ['pad' => $pad, 'si' => $si];
@@ -37,10 +41,10 @@ function appConfig(): array
         return $cached;
     }
 
-    $path = dirname(__DIR__) . '/config.php';
-    $cached = is_file($path) ? (require $path) : [];
+    require_once __DIR__ . '/config-loader.php';
+    $cached = loadAppConfig();
 
-    return is_array($cached) ? $cached : [];
+    return $cached;
 }
 
 /** Canonical site URL from config, or auto-detected from the current request */
@@ -62,8 +66,15 @@ function appBaseUrl(): string
 
 function flashStart(): void
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+    if (session_status() !== PHP_SESSION_NONE) {
+        return;
+    }
+    try {
+        if (!@session_start()) {
+            return;
+        }
+    } catch (Throwable $e) {
+        return;
     }
 }
 

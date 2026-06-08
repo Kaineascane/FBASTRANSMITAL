@@ -1,9 +1,5 @@
 <?php
 
-/**
- * Redirect visitors to the canonical Hostinger (or other) domain when configured.
- * InfinityFree subdomain stays allowed while DNS/SSL is being set up.
- */
 function applyDomainSettings(array $config): void
 {
     if (PHP_SAPI === 'cli') {
@@ -22,7 +18,7 @@ function applyDomainSettings(array $config): void
 
     $canonicalHost = strtolower($parsed['host']);
     $canonicalScheme = strtolower($parsed['scheme'] ?? 'https');
-    $forceHttps = (bool) ($config['force_https'] ?? true);
+    $forceHttps = (bool) ($config['force_https'] ?? false);
     $allowInfinityFree = (bool) ($config['allow_infinityfree_fallback'] ?? true);
 
     $currentHost = strtolower($_SERVER['HTTP_HOST'] ?? '');
@@ -42,17 +38,13 @@ function applyDomainSettings(array $config): void
     $allowedHosts = array_unique($allowedHosts);
 
     if (in_array($currentHost, $allowedHosts, true)) {
-        if ($forceHttps && !$isHttps && $canonicalScheme === 'https') {
-            redirectTo(buildRequestUrl('https', $currentHost));
-        }
+        maybeForceHttps($forceHttps, $isHttps, $canonicalScheme, $currentHost);
 
         return;
     }
 
     if ($allowInfinityFree && isInfinityFreeHost($currentHost)) {
-        if ($forceHttps && !$isHttps && $canonicalScheme === 'https') {
-            redirectTo(buildRequestUrl('https', $currentHost));
-        }
+        maybeForceHttps($forceHttps, $isHttps, $canonicalScheme, $currentHost);
 
         return;
     }
@@ -60,6 +52,15 @@ function applyDomainSettings(array $config): void
     $target = rtrim($appUrl, '/');
     $uri = $_SERVER['REQUEST_URI'] ?? '/';
     redirectTo($target . $uri);
+}
+
+function maybeForceHttps(bool $forceHttps, bool $isHttps, string $canonicalScheme, string $currentHost): void
+{
+    if (!$forceHttps || $isHttps || $canonicalScheme !== 'https') {
+        return;
+    }
+
+    redirectTo(buildRequestUrl('https', $currentHost));
 }
 
 function isRequestHttps(): bool
@@ -70,8 +71,21 @@ function isRequestHttps(): bool
     if (isset($_SERVER['SERVER_PORT']) && (int) $_SERVER['SERVER_PORT'] === 443) {
         return true;
     }
+    if (strtolower($_SERVER['REQUEST_SCHEME'] ?? '') === 'https') {
+        return true;
+    }
 
-    return strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    $proto = strtolower($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '');
+    if ($proto === 'https') {
+        return true;
+    }
+
+    $ssl = strtolower($_SERVER['HTTP_X_FORWARDED_SSL'] ?? '');
+    if ($ssl === 'on') {
+        return true;
+    }
+
+    return false;
 }
 
 function isInfinityFreeHost(string $host): bool
@@ -107,6 +121,13 @@ function buildRequestUrl(string $scheme, string $host): string
 
 function redirectTo(string $url): void
 {
+    $current = (isRequestHttps() ? 'https' : 'http') . '://'
+        . ($_SERVER['HTTP_HOST'] ?? '')
+        . ($_SERVER['REQUEST_URI'] ?? '/');
+    if (rtrim($url, '/') === rtrim($current, '/')) {
+        return;
+    }
+
     header('Location: ' . $url, true, 301);
     exit;
 }

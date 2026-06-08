@@ -1,5 +1,7 @@
 # Never commit secrets or local config
 config.php
+config.local.php
+.install-complete
 .env
 .env.*
 
@@ -16,3 +18,5 @@ lan-check.php
 
 # Deployment packages (generated locally)
 deploy/*.zip
+deploy/ftp.local.ps1
+deploy/remote-config.php

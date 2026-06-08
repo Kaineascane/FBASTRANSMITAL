@@ -1,17 +1,14 @@
-<?php
-/**
- * Copy to config.php on your server (cPanel File Manager or FTP).
- * Do NOT commit config.php to GitHub — it is listed in .gitignore.
- */
-return [
-    'db_host' => 'localhost',              // InfinityFree: sql###.infinityfree.com (from MySQL panel, NOT your website URL)
-    'db_user' => 'your_database_username',
-    'db_pass' => 'your_database_password',
-    'db_name' => 'your_database_name',
-    'debug' => false,                      // true only while fixing errors; false on live site
-
-    'app_url' => 'https://fbastransmittal.infinityfree.io',
-    'force_https' => true,
-    'allow_infinityfree_fallback' => true,
-];
-
+<?php
+/**
+ * Copy to config.php on your server. Do NOT commit config.php to Git.
+ */
+return [
+    'db_host' => 'sql308.infinityfree.com',
+    'db_user' => 'if0_42101552',
+    'db_pass' => 'your_mysql_password',
+    'db_name' => 'if0_42101552_fbastransmittal',
+    'debug' => false,
+    'app_url' => 'https://fbastransmittal.infinityfree.io',
+    'force_https' => false,
+    'allow_infinityfree_fallback' => true,
+];
