@@ -1,57 +1,61 @@
-# Vercel + S.I Transmittal
+# Deploy on Vercel (Next.js)
 
-## Important: this app is PHP + MySQL
+The app is now **Next.js + Vercel Postgres**. The old PHP files remain in the repo for reference but are **not** used on Vercel.
 
-Vercel runs **Node.js / static / serverless** — it does **not** run PHP with MySQL the way XAMPP or InfinityFree do.
+## 1. Push to GitHub
 
-You **cannot** upload `index.php`, `save.php`, and `config.php` to Vercel and expect the transmittal system to work without rewriting the backend.
+Repo: https://github.com/Kaineascane/FBASTRANSMITAL
 
----
+## 2. Import to Vercel
 
-## Option A — Buy domain on Vercel, host PHP elsewhere (recommended, no rewrite)
+1. Go to [vercel.com](https://vercel.com) → **Add New Project**
+2. Import **FBASTRANSMITAL** from GitHub
+3. Framework: **Next.js** (auto-detected)
+4. Click **Deploy** (first build may fail until database is added — that's OK)
 
-1. Buy your domain in [Vercel Domains](https://vercel.com/domains).
-2. Keep the app on **PHP hosting** (Hostinger, InfinityFree, Railway, etc.).
-3. In Vercel → your domain → **DNS**:
-   - **A** record `@` → your PHP host IP (from host panel)
-   - **CNAME** `www` → your host’s www target (or same A record)
-4. On the PHP host, upload this project to `public_html` / `htdocs`.
-5. Set `app_url` in `config.php` to `https://yourdomain.com`.
+## 3. Add Vercel Postgres
 
-**GitHub repo (deploy PHP from):** https://github.com/Kaineascane/FBASTRANSMITAL
+1. Vercel project → **Storage** → **Create Database** → **Postgres**
+2. Connect it to your project (adds `POSTGRES_URL` env vars automatically)
+3. **Redeploy**
 
----
+## 4. Create database tables
 
-## Option B — Full Vercel hosting (requires rewrite)
+1. Vercel project → **Settings** → **Environment Variables**
+2. Add `SETUP_SECRET` = any random string (e.g. `my-secret-setup-key`)
+3. Redeploy, then open in browser:
 
-To run entirely on Vercel you would need to:
+```
+https://YOUR-PROJECT.vercel.app/api/setup?key=my-secret-setup-key
+```
 
-- Rebuild the app in **Next.js** (or similar)
-- Replace PHP with **API routes**
-- Use **Vercel Postgres**, **Neon**, or **Supabase** instead of MySQL
+You should see: `{"ok":true,"message":"Database tables created."}`
 
-That is a separate development task — not a zip upload.
+## 5. Buy / connect your domain
 
----
+1. Vercel project → **Settings** → **Domains**
+2. Add your domain (purchased on Vercel or elsewhere)
+3. Follow DNS instructions if domain is external
 
-## Option C — Vercel project for docs only
+## 6. Test
 
-You can connect this GitHub repo to Vercel, but without a Next.js app Vercel will not serve the transmittal form. Use Option A instead.
+| URL | What |
+|-----|------|
+| `/` | New transmittal form |
+| `/search` | Search / reprint |
+| `/print/1` | Print slip (after saving one) |
 
----
+## Local development
 
-## Quick comparison
+```bash
+npm install
+cp .env.example .env.local
+# Add POSTGRES_URL from Vercel dashboard → Storage → .env.local
+npm run dev
+```
 
-| | PHP host + Vercel domain | Vercel-only |
-|--|--------------------------|-------------|
-| Works with current code | Yes | No — rewrite needed |
-| Cost | Domain + free/cheap PHP host | Vercel + database |
-| Setup time | ~30 minutes | Days (rewrite) |
+Open http://localhost:3000
 
----
+## Legacy PHP
 
-## Files to deploy (PHP host)
-
-Upload everything except `config.php` (create on server from `config.example.php`).
-
-Import `sql/setup-hosting.sql` in phpMyAdmin, then set database credentials in `config.php`.
+PHP files (`index.php`, `save.php`, etc.) are kept for XAMPP/InfinityFree. For Vercel, only the `app/` Next.js routes are used.

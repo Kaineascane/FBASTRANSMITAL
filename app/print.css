@@ -1,0 +1,10 @@
+@import url('../css/print.css');
+
+.print-body {
+  margin: 0;
+  padding: 0;
+  background: #c5ccd6;
+  font-family: Arial, Calibri, 'Segoe UI', sans-serif;
+  font-size: 9pt;
+  color: #000;
+}
