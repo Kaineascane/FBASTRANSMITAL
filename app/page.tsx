@@ -1,15 +1,27 @@
 import AppHeader from '@/components/AppHeader';
+import DbSetupBanner from '@/components/DbSetupBanner';
 import TransmittalForm from '@/components/TransmittalForm';
 import { ensureSchema } from '@/lib/db';
-import { consumeFlash } from '@/lib/flash';
+import { decodeFlashParam } from '@/lib/flash';
 import { getNextSeries } from '@/lib/transmittal';
 
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
-  await ensureSchema().catch(() => null);
-  const { errors, old } = await consumeFlash();
-  const next = await getNextSeries().catch(() => ({ pad: 1, si: 1 }));
+type Props = { searchParams: Promise<{ flash?: string }> };
+
+export default async function HomePage({ searchParams }: Props) {
+  const dbConfigured = Boolean(process.env.POSTGRES_URL);
+
+  if (dbConfigured) {
+    await ensureSchema().catch(() => null);
+  }
+
+  const { flash } = await searchParams;
+  const { errors, old } = decodeFlashParam(flash);
+
+  const next = dbConfigured
+    ? await getNextSeries().catch(() => ({ pad: 1, si: 1 }))
+    : { pad: 1, si: 1 };
   const today = new Date().toISOString().slice(0, 10);
   const lastSiEnd = Math.max(0, next.si - 1);
 
@@ -27,6 +39,7 @@ export default async function HomePage() {
     <>
       <AppHeader />
       <main className="app-main container">
+        {!dbConfigured && <DbSetupBanner />}
         <TransmittalForm
           errors={errors}
           nextPad={next.pad}

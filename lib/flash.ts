@@ -1,33 +1,32 @@
-import { cookies } from 'next/headers';
-
 export type FlashData = {
   errors: string[];
   old: Record<string, string | number>;
 };
 
-export async function setFlash(errors: string[], old: Record<string, string | number>): Promise<void> {
-  const store = await cookies();
-  store.set('flash_errors', JSON.stringify(errors), { maxAge: 120, httpOnly: true, path: '/' });
-  store.set('flash_old', JSON.stringify(old), { maxAge: 120, httpOnly: true, path: '/' });
+const emptyFlash = (): FlashData => ({ errors: [], old: {} });
+
+/** Encode validation errors into a redirect URL (works in Route Handlers & dev tunnels). */
+export function flashRedirectUrl(
+  path: string,
+  errors: string[],
+  old: Record<string, string | number>
+): string {
+  const payload = Buffer.from(JSON.stringify({ errors, old }), 'utf8').toString('base64url');
+  return `${path}?flash=${payload}`;
 }
 
-export async function consumeFlash(): Promise<FlashData> {
-  const store = await cookies();
-  const errorsRaw = store.get('flash_errors')?.value;
-  const oldRaw = store.get('flash_old')?.value;
-
-  if (errorsRaw) store.delete('flash_errors');
-  if (oldRaw) store.delete('flash_old');
-
-  let errors: string[] = [];
-  let old: Record<string, string | number> = {};
+/** Read flash from URL search param (safe in Server Components — no cookie writes). */
+export function decodeFlashParam(flashParam: string | undefined): FlashData {
+  if (!flashParam) return emptyFlash();
 
   try {
-    if (errorsRaw) errors = JSON.parse(errorsRaw);
-    if (oldRaw) old = JSON.parse(oldRaw);
+    const json = Buffer.from(flashParam, 'base64url').toString('utf8');
+    const parsed = JSON.parse(json) as Partial<FlashData>;
+    return {
+      errors: Array.isArray(parsed.errors) ? parsed.errors.map(String) : [],
+      old: parsed.old && typeof parsed.old === 'object' ? parsed.old : {},
+    };
   } catch {
-    /* ignore */
+    return emptyFlash();
   }
-
-  return { errors, old };
 }
