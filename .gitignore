@@ -13,6 +13,7 @@ config.local.php
 .install-complete
 .env
 .env.*
+!.env.example
 
 # OS / editor
 .DS_Store
