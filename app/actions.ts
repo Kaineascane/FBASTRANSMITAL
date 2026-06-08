@@ -2,13 +2,12 @@
 
 import { headers } from 'next/headers';
 import { handleCreateTransmittal } from '@/lib/handle-create';
+import { getRequestBaseUrl } from '@/lib/request-url';
 
 export async function createTransmittal(formData: FormData): Promise<void> {
   const h = await headers();
-  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000';
-  const proto = h.get('x-forwarded-proto') ?? 'http';
-  const url = `${proto}://${host}/`;
-  const request = new Request(url);
+  const request = new Request('http://localhost/', { headers: h });
+  const url = getRequestBaseUrl(request);
   const response = await handleCreateTransmittal(formData, request);
   // Server Actions: follow redirect manually
   const location = response.headers.get('Location');

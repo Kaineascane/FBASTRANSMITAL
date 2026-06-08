@@ -1,12 +1,13 @@
 import { ensureSchema } from '@/lib/db';
 import { flashRedirectUrl } from '@/lib/flash';
+import { getRequestBaseUrl } from '@/lib/request-url';
 import { saveTransmittal, validateTransmittalInput } from '@/lib/transmittal';
 
 export async function handleCreateTransmittal(
   formData: FormData,
   request?: Request
 ): Promise<Response> {
-  const base = request?.url ?? 'http://localhost:3000/';
+  const base = request ? getRequestBaseUrl(request) : 'http://localhost:3000/';
 
   const input = {
     from_branch: String(formData.get('from_branch') ?? ''),
